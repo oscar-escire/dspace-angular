@@ -232,4 +232,133 @@ describe('New Submission page', () => {
     cy.get('button#discard').click();
     cy.get('button#discard_submit').click();
   });
+
+  describe('Validating default entity submissions', () => {
+    const startSubmission = (title: string, collection: string) => {
+      // Open dropdown submission modal
+      cy.get('#dropdownSubmission').click();
+
+      cy.get('#entityControlsDropdownMenu button[title="'.concat(title).concat('"]')).click();
+
+      //Validate selector be visible and enter SUBMIT_COLLECTION_NAME
+      cy.get('ds-create-item-parent-selector').should('be.visible');
+      cy.get('ds-authorized-collection-selector input[type="search"]').type(collection);
+      cy.get('ds-create-item-parent-selector button[title="'.concat(collection).concat('"]')).click();
+    };
+
+    const fieldsByEntity = {
+      publication : [
+        'id="dc_contributor_author"',
+        'name="dc.title"',
+        'name="dc.title.alternative"',
+        'id="dc_date_issued_year"',
+        'id="dc_publisher"',
+        'name="dc.identifier.citation"',
+        'name="dc.relation.ispartofseries_CONCAT_FIRST_INPUT"',
+        'name="dc.relation.ispartofseries_CONCAT_SECOND_INPUT"',
+        'name="dc.relation.isBasedOn"',
+        'name="dc.identifier_QUALDROP_VALUE"',
+        'name="dc.type"',
+        'name="dc.language.iso"',
+      ],
+      person: [
+        'name="person.familyName"',
+        'name="person.givenName"',
+        'name="person.email"',
+        'id="person_birthDate_year"',
+        'name="person.jobTitle"',
+      ],
+      project: [
+        'name="dc.title"',
+        'name="dc.identifier"',
+        'name="project.investigator"',
+        'name="dc.contributor.other"',
+        'name="dc.subject"',
+        'id="project_startDate_year"',
+        'id="project_endDate_year"',
+        'name="project.amount"',
+        'name="project.amount.currency"',
+        'name="dc.description"',
+      ],
+      orgUnit: [
+        'name="organization.legalName"',
+        'name="dc.identifier"',
+        'id="organization_foundingDate_year"',
+        'name="organization.address.addressLocality"',
+        'name="organization.address.addressCountry"',
+        'name="dc.description"',
+      ],
+      journal: [
+        'name="dc.title"',
+        'name="creativework.editor_CONCAT_FIRST_INPUT"',
+        'name="creativework.editor_CONCAT_SECOND_INPUT"',
+        'name="creativeworkseries.issn"',
+        'name="dc.description"',
+        'name="creativework.publisher"',
+      ],
+      journalVolume: [
+        'name="dc.title"',
+        'name="publicationvolume.volumeNumber"',
+        'id="creativework_datePublished_year"',
+        'name="dc.description"',
+      ],
+      journalIssue: [
+        'name="dc.title"',
+        'name="publicationissue.issueNumber"',
+        'id="creativework_datePublished_year"',
+        'name="dc.description"',
+        'name="creativework.keywords"',
+      ],
+    }
+
+    function validateFields(entity) {
+      fieldsByEntity[entity].forEach((metadata) => {
+        cy.get(`[${metadata}]`) .should('exist') .and('be.visible');
+      });
+    }
+
+    beforeEach(() => {
+      // To start a new entity type submission we need to log as admin and go to My DSpace
+      cy.visit('/mydspace');
+
+      cy.env(['DSPACE_TEST_ADMIN_USER', 'DSPACE_TEST_ADMIN_PASSWORD']).then(({ DSPACE_TEST_ADMIN_USER, DSPACE_TEST_ADMIN_PASSWORD }) => {
+        cy.loginViaForm(DSPACE_TEST_ADMIN_USER, DSPACE_TEST_ADMIN_PASSWORD);
+      });
+    });
+
+    it('should show you the Publication form', () => {
+      startSubmission('Publication', Cypress.expose('DSPACE_TEST_SUBMIT_WORKFLOW_COLLECTION_NAME'));
+      validateFields('publication');
+    });
+
+    it('should show you the Person form', () => {
+      startSubmission('Person', Cypress.expose('DSPACE_TEST_PEOPLE_COLLECTION_NAME'));
+      validateFields('person');
+    });
+
+    it('should show you the Project form', () => {
+      startSubmission('Project', Cypress.expose('DSPACE_TEST_PROJECT_COLLECTION_NAME'));
+      validateFields('project');
+    });
+
+    it('should show you the OrgUnit form', () => {
+      startSubmission('OrgUnit', Cypress.expose('DSPACE_TEST_ORG_UNIT_COLLECTION_NAME'));
+      validateFields('orgUnit');
+    });
+
+    it('should show you the Journal form', () => {
+      startSubmission('Journal', Cypress.expose('DSPACE_TEST_JOURNAL_COLLECTION_NAME'));
+      validateFields('journal');
+    });
+
+    it('should show you the Journal Volume form', () => {
+      startSubmission('JournalVolume', Cypress.expose('DSPACE_TEST_JOURNAL_VOLUME_COLLECTION_NAME'));
+      validateFields('journalVolume');
+    });
+
+    it('should show you the Journal Issue form', () => {
+      startSubmission('JournalIssue', Cypress.expose('DSPACE_TEST_JOURNAL_ISSUE_COLLECTION_NAME'));
+      validateFields('journalIssue');
+    });
+  });
 });
